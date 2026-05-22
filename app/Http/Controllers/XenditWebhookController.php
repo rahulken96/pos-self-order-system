@@ -10,7 +10,7 @@ class XenditWebhookController extends Controller
 {
     public function handle(Request $request)
     {
-        if ($request->header('x-callback-token') !== config('services.xendit.webhook_token', env('XENDIT_WEBHOOK_TOKEN'))) {
+        if ($request->header('x-callback-token') !== config('services.xendit.webhook_token')) {
             abort(403);
         }
 

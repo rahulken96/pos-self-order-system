@@ -108,7 +108,7 @@ class CustomerController extends Controller
 
     public function payOnline(Order $order)
     {
-        \Xendit\Configuration::setXenditKey(config('services.xendit.secret_key', env('XENDIT_SECRET_KEY')));
+        \Xendit\Configuration::setXenditKey(config('services.xendit.secret_key'));
         
         $apiInstance = new \Xendit\Invoice\InvoiceApi();
         $create_invoice_request = new \Xendit\Invoice\CreateInvoiceRequest([

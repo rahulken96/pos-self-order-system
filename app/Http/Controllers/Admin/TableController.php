@@ -6,73 +6,63 @@ use App\Http\Controllers\Controller;
 use App\Models\Table;
 use Illuminate\Http\Request;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
+use Inertia\Inertia;
 
 class TableController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
-        //
+        $tables = Table::orderBy('number')->get();
+        return Inertia::render('Admin/Tables/Index', [
+            'tables' => $tables
+        ]);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
-        //
+        $request->validate([
+            'number' => 'required|integer|unique:tables,number',
+        ]);
+
+        $table = Table::create([
+            'number' => $request->number,
+            'status' => 'available'
+        ]);
+
+        // Generate QR code right away
+        $url = route('customer.order', $table->id);
+        $qr  = QrCode::format('svg')->size(300)->generate($url);
+        $table->update(['qr_code' => base64_encode($qr)]);
+
+        return redirect()->route('tables.index')->with('success', 'Meja berhasil ditambahkan.');
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
+    public function update(Request $request, Table $table)
     {
-        //
+        $request->validate([
+            'number' => 'required|integer|unique:tables,number,' . $table->id,
+            'status' => 'required|in:available,occupied'
+        ]);
+
+        $table->update([
+            'number' => $request->number,
+            'status' => $request->status,
+        ]);
+
+        return redirect()->route('tables.index')->with('success', 'Meja berhasil diperbarui.');
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
+    public function destroy(Table $table)
     {
-        //
+        $table->delete();
+        return redirect()->route('tables.index')->with('success', 'Meja berhasil dihapus.');
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
-    }
-
-    /**
-     * Generate QR Code for the table.
-     */
     public function generateQr(Table $table)
     {
         $url = route('customer.order', $table->id);
-        $qr  = QrCode::format('png')->size(300)->generate($url);
+        $qr  = QrCode::format('svg')->size(300)->generate($url);
         $table->update(['qr_code' => base64_encode($qr)]);
-        return back()->with('success', 'QR Code berhasil di-generate untuk meja ' . $table->number);
+        return redirect()->route('tables.index')->with('success', 'QR Code berhasil di-generate untuk meja ' . $table->number);
     }
 }
