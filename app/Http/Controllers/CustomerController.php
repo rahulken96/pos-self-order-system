@@ -20,20 +20,45 @@ class CustomerController extends Controller
             ->whereIn('status', ['draft', 'pending', 'confirmed', 'cooking', 'ready'])
             ->first();
 
-        if (!$order) {
-            return Inertia::render('Customer/Start', compact('table'));
+        if ($order) {
+            // Check if this browser is the owner of the active order
+            if (session("active_order_{$table->id}") == $order->id) {
+                $categories = Category::with(['menuItems' => fn($q) => $q->where('is_available', true)])->get();
+
+                // Calculate estimated wait time based on active queue
+                $activeQueue = Order::whereIn('status', ['pending', 'confirmed', 'cooking'])->count();
+                $estimatedWaitTime = max(10, 10 + ($activeQueue * 5)); // min 10m, +5m per order
+
+                return Inertia::render('Customer/Menu', [
+                    'table' => $table,
+                    'categories' => $categories,
+                    'order' => $order->load('items.menuItem'),
+                    'estimated_wait_time' => $estimatedWaitTime,
+                ]);
+            } else {
+                // Table is occupied by someone else (or session got cleared)
+                return Inertia::render('Customer/TableOccupied', [
+                    'table' => $table,
+                    'error' => session('error'),
+                ]);
+            }
         }
 
-        $categories = Category::with(['menuItems' => fn($q) => $q->where('is_available', true)])->get();
-        return Inertia::render('Customer/Menu', [
-            'table' => $table,
-            'categories' => $categories,
-            'order' => $order->load('items.menuItem'),
-        ]);
+        return Inertia::render('Customer/Start', compact('table'));
     }
 
     public function start(Request $request, Table $table)
     {
+        // Double check table occupancy status to prevent race conditions
+        $existing = Order::where('table_id', $table->id)
+            ->whereIn('status', ['draft', 'pending', 'confirmed', 'cooking', 'ready'])
+            ->first();
+
+        if ($existing) {
+            return redirect()->route('customer.order', $table->id)
+                ->with('error', 'Meja sedang digunakan.');
+        }
+
         $request->validate([
             'customer_name'  => 'required|string|max:100',
             'customer_phone' => 'required|string|max:20',
@@ -49,7 +74,29 @@ class CustomerController extends Controller
 
         $table->update(['status' => 'occupied']);
 
+        // Store active order ID in browser session
+        session(["active_order_{$table->id}" => $order->id]);
+
         return redirect()->route('customer.order', $table->id);
+    }
+
+    public function resume(Request $request, Table $table)
+    {
+        $request->validate([
+            'customer_phone' => 'required|string|max:20',
+        ]);
+
+        $order = Order::where('table_id', $table->id)
+            ->whereIn('status', ['draft', 'pending', 'confirmed', 'cooking', 'ready'])
+            ->first();
+
+        if ($order && $order->customer_phone === $request->customer_phone) {
+            session(["active_order_{$table->id}" => $order->id]);
+            return redirect()->route('customer.order', $table->id);
+        }
+
+        return redirect()->route('customer.order', $table->id)
+            ->with('error', 'Nomor handphone tidak cocok dengan pesanan aktif.');
     }
 
     public function addItem(Request $request, Order $order)

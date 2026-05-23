@@ -1,11 +1,12 @@
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { usePage, router } from '@inertiajs/vue3';
 import axios from 'axios';
 import Card from 'primevue/card';
 import Button from 'primevue/button';
 import Dialog from 'primevue/dialog';
 import InputNumber from 'primevue/inputnumber';
+import InputText from 'primevue/inputtext';
 import Textarea from 'primevue/textarea';
 import Toast from 'primevue/toast';
 import { useToast } from 'primevue/usetoast';
@@ -14,17 +15,45 @@ import Badge from 'primevue/badge';
 const props = defineProps({
     table: Object,
     categories: Array,
-    order: Object
+    order: Object,
+    estimated_wait_time: Number,
 });
 
 const toast = useToast();
 const currentOrder = ref(props.order);
+const searchQuery = ref('');
 
 const selectedCategory = ref(props.categories.length > 0 ? props.categories[0].id : null);
 const activeCategoryItems = computed(() => {
     const category = props.categories.find(c => c.id === selectedCategory.value);
-    return category ? category.menu_items : [];
+    let items = category ? category.menu_items : [];
+    if (searchQuery.value) {
+        const q = searchQuery.value.toLowerCase();
+        items = items.filter(item =>
+            item.name.toLowerCase().includes(q) ||
+            (item.description && item.description.toLowerCase().includes(q))
+        );
+    }
+    return items;
 });
+
+// Search across ALL categories
+const allSearchResults = computed(() => {
+    if (!searchQuery.value) return [];
+    const q = searchQuery.value.toLowerCase();
+    let results = [];
+    props.categories.forEach(cat => {
+        cat.menu_items.forEach(item => {
+            if (item.name.toLowerCase().includes(q) || (item.description && item.description.toLowerCase().includes(q))) {
+                results.push(item);
+            }
+        });
+    });
+    return results;
+});
+
+const showSearchResults = computed(() => searchQuery.value.length > 0);
+const displayItems = computed(() => showSearchResults.value ? allSearchResults.value : activeCategoryItems.value);
 
 const cartTotal = computed(() => {
     return currentOrder.value?.total_price || 0;
@@ -109,6 +138,36 @@ const payOnline = async () => {
         isSubmitting.value = false;
     }
 };
+
+// Real-time Echo listener
+onMounted(() => {
+    if (window.Echo) {
+        window.Echo.channel('kitchen')
+            .listen('OrderStatusUpdated', (e) => {
+                if (e.order.id === currentOrder.value.id) {
+                    currentOrder.value = e.order;
+
+                    if (e.order.status === 'cooking') {
+                        toast.add({ severity: 'info', summary: 'Status Pesanan', detail: 'Pesanan Anda mulai dimasak di dapur.', life: 5000 });
+                    } else if (e.order.status === 'ready') {
+                        toast.add({ severity: 'success', summary: 'Makanan Siap Saji', detail: 'Pesanan Anda siap disajikan! Silakan ambil.', life: 8000 });
+                    } else if (e.order.status === 'completed') {
+                        toast.add({ severity: 'success', summary: 'Pembayaran Lunas', detail: 'Terima kasih, pembayaran Anda berhasil dikonfirmasi!', life: 5000 });
+                        setTimeout(() => { router.visit('/'); }, 3000);
+                    } else if (e.order.status === 'cancelled') {
+                        toast.add({ severity: 'error', summary: 'Pesanan Dibatalkan', detail: 'Pesanan Anda dibatalkan oleh kasir.', life: 5000 });
+                        setTimeout(() => { router.visit('/'); }, 3000);
+                    }
+                }
+            });
+    }
+});
+
+onUnmounted(() => {
+    if (window.Echo) {
+        window.Echo.leaveChannel('kitchen');
+    }
+});
 </script>
 
 <template>
@@ -121,14 +180,32 @@ const payOnline = async () => {
                 <div>
                     <h1 class="text-xl font-bold text-gray-800 dark:text-white">Meja {{ table.number }}</h1>
                     <p class="text-sm text-gray-500 dark:text-gray-400">Halo, {{ currentOrder?.customer_name }}</p>
+                    <div class="flex items-center gap-2 mt-1">
+                        <span class="text-xs bg-slate-100 dark:bg-gray-800 text-slate-600 dark:text-slate-400 py-1 px-2.5 rounded-full flex items-center gap-1 border border-slate-200/50 dark:border-gray-700">
+                            <i class="pi pi-clock text-[10px]"></i>
+                            <span>Antrean Dapur: ~{{ estimated_wait_time }} Menit</span>
+                        </span>
+                    </div>
                 </div>
                 <div class="flex items-center gap-2">
-                    <Badge v-if="currentOrder?.status" :value="currentOrder.status.toUpperCase()" :severity="currentOrder.status === 'draft' ? 'secondary' : 'info'" class="text-xs"></Badge>
+                    <Badge v-if="currentOrder?.status" :value="currentOrder.status.toUpperCase()" :severity="currentOrder.status === 'draft' ? 'secondary' : currentOrder.status === 'ready' ? 'success' : currentOrder.status === 'cooking' ? 'warn' : 'info'" class="text-xs"></Badge>
                 </div>
+            </div>
+
+            <!-- Search Bar -->
+            <div class="px-4 pb-2 pt-1 border-t border-gray-100 dark:border-gray-800">
+                <span class="p-input-icon-left w-full">
+                    <i class="pi pi-search text-gray-400" />
+                    <InputText 
+                        v-model="searchQuery" 
+                        placeholder="Cari makanan atau minuman..." 
+                        class="w-full bg-gray-50 dark:bg-gray-800 border-none rounded-xl"
+                    />
+                </span>
             </div>
             
             <!-- Category Tabs -->
-            <div class="overflow-x-auto hide-scrollbar border-t border-gray-100 dark:border-gray-800">
+            <div v-if="!showSearchResults" class="overflow-x-auto hide-scrollbar border-t border-gray-100 dark:border-gray-800">
                 <div class="flex p-2 gap-2">
                     <button 
                         v-for="cat in categories" 
@@ -145,12 +222,17 @@ const payOnline = async () => {
                     </button>
                 </div>
             </div>
+            <div v-else class="px-4 py-2 border-t border-gray-100 dark:border-gray-800">
+                <p class="text-xs text-gray-500 dark:text-gray-400">
+                    <i class="pi pi-search text-[10px]"></i> Hasil pencarian: {{ allSearchResults.length }} item ditemukan
+                </p>
+            </div>
         </div>
 
         <!-- Menu List -->
         <div class="p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <div 
-                v-for="item in activeCategoryItems" 
+                v-for="item in displayItems" 
                 :key="item.id"
                 @click="openItemModal(item)"
                 class="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm hover:shadow-md transition-shadow border border-gray-100 dark:border-gray-700 flex gap-4 cursor-pointer"
@@ -173,9 +255,10 @@ const payOnline = async () => {
                 </div>
             </div>
             
-            <div v-if="activeCategoryItems.length === 0" class="col-span-full py-12 text-center text-gray-400">
+            <div v-if="displayItems.length === 0" class="col-span-full py-12 text-center text-gray-400">
                 <i class="pi pi-inbox text-4xl mb-3"></i>
-                <p>Belum ada menu di kategori ini.</p>
+                <p v-if="showSearchResults">Tidak ada menu yang cocok dengan pencarian.</p>
+                <p v-else>Belum ada menu di kategori ini.</p>
             </div>
         </div>
 

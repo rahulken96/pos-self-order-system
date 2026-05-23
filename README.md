@@ -99,6 +99,100 @@ sequenceDiagram
 
 ---
 
+## 📸 Interface Screenshots & Visuals
+
+### A. Customer Experience (Mobile-Optimized)
+
+<p align="center">
+  <img src="docs/customer/cust.png" width="500" alt="Table Selection Page" />
+  <br>
+</p>
+<strong>Table Selection Page:</strong> Customers choose an empty table to start ordering. Occupied tables are marked with a dark color and "Sedang Terisi" (Occupied) status.
+
+---
+
+<p align="center">
+  <img src="docs/customer/cust_1.png" width="500" alt="Customer Registration & Onboarding" />
+  <br>
+</p>
+<strong>Customer Registration & Onboarding:</strong> Form to input full name and WhatsApp number to verify customer identity at the table before accessing the menu.
+
+---
+
+<p align="center">
+  <img src="docs/customer/cust_2.png" width="500" alt="Self-Order Menu & Cart" />
+  <br>
+</p>
+<strong>Self-Order Menu:</strong> Interactive menu listing with fast search, categories (Main Course, Drinks, etc.), kitchen queue estimation, and active order status.
+
+---
+
+<p align="center">
+  <img src="docs/customer/cust_3.png" width="500" alt="Shopping Cart (Your Order)" />
+  <br>
+</p>
+<strong>Shopping Cart (Your Order):</strong> Modal showing details of customer's active order to review selected items and custom notes (e.g. spicy levels) before placing order.
+
+---
+
+<p align="center">
+  <img src="docs/customer/cust_4.png" width="500" alt="Payment Method Options" />
+  <br>
+</p>
+<strong>Payment Method Options:</strong> Modal for selecting checkout method, offering online payment (QRIS/E-Wallet/Bank Transfer via Xendit) or cash payment directly to the cashier.
+
+### B. Staff & Admin Dashboards (Desktop-Optimized)
+
+<p align="center">
+  <img src="docs/ktichen/dapur_1.png" width="500" alt="Real-time Kitchen Queue" />
+  <br>
+</p>
+<strong>Real-time Kitchen Queue:</strong> Dedicated kitchen dashboard updated in real-time via Laravel Reverb, showing incoming orders with custom notes and action buttons (e.g., "Selesai Masak").
+
+---
+
+<p align="center">
+  <img src="docs/cashier/kasir_1.png" width="500" alt="Cashier Dashboard (Table Monitoring)" />
+  <br>
+</p>
+<strong>Cashier Dashboard (Table Monitoring):</strong> Interactive visual table layout with color indicators for real-time operational status (Available, Waiting for Kitchen, Cooking, Ready to Serve, Requesting Bill).
+
+---
+
+<p align="center">
+  <img src="docs/cashier/kasir_2.png" width="500" alt="Cashier Payment Detail & Checkout" />
+  <br>
+</p>
+<strong>Cashier Payment Detail & Checkout:</strong> Interface for cashier when processing payments, including order details, total bill, cash received input, auto change calculation, and payment confirmation.
+
+---
+
+<p align="center">
+  <img src="docs/cashier/struk_1.png" width="500" alt="Receipt / Invoice (PDF)" />
+  <br>
+</p>
+<strong>Receipt / Invoice (PDF):</strong> Print-ready payment receipt (including thermal printing format) containing customer name, table details, itemized orders with custom notes, total paid, change, and completed/paid status.
+
+---
+
+<p align="center">
+  <img src="docs/admin/admin_1.png" width="500" alt="Admin Dashboard & Report" />&nbsp;&nbsp;&nbsp;
+  <img src="docs/admin/admin_2.png" width="500" alt="Admin Dashboard & Report" />&nbsp;&nbsp;&nbsp;
+  <img src="docs/admin/admin_3.png" width="500" alt="Admin Dashboard & Report" />
+  <br>
+</p>
+<strong>Admin Dashboard & Sales Reports:</strong> Financial analytics page for restaurant owner. Provides transaction date filters, revenue metrics, and instant exports to Excel or PDF format.
+
+---
+
+<p align="center">
+  <img src="docs/admin/report_1.png" width="450" height="auto" alt="Sales Report PDF" />
+  <br>
+</p>
+<strong>Sales Report PDF:</strong> Sample of the exported sales report in PDF format.
+
+---
+
 ## ⚡ Tech Stack & Libraries
 
 * **Backend Framework:** Laravel 12 (Core API, Eloquent, Authentication)
@@ -154,13 +248,17 @@ sequenceDiagram
      ```bash
      php artisan serve
      ```
-   * **Terminal 2 (Reverb WebSockets):**
-     ```bash
-     php artisan reverb:start
-     ```
-   * **Terminal 3 (Vite Asset compiler):**
+   * **Terminal 2 (Vite Asset compiler):**
      ```bash
      npm run dev
+     ```
+   * **Terminal 3 (Reverb WebSockets):**
+     ```bash
+     php artisan reverb:start --debug
+     ```
+   * **Terminal 4 (Queue Jobs):**
+     ```bash
+     php artisan queue:work
      ```
 
 6. **Access the App:**

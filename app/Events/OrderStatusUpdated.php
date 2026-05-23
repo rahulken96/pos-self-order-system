@@ -35,4 +35,11 @@ class OrderStatusUpdated implements ShouldBroadcast
             new Channel('kasir'),
         ];
     }
+
+    public function broadcastWith(): array
+    {
+        return [
+            'order' => $this->order->load(['items.menuItem', 'table', 'payment']),
+        ];
+    }
 }

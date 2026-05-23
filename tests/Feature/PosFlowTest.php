@@ -50,12 +50,21 @@ test('customer sees identity form when table has no active order', function () {
          ->assertInertia(fn ($p) => $p->component('Customer/Start'));
 });
 
-test('customer sees menu when table has active draft order', function () {
+test('customer sees menu when table has active draft order and valid session', function () {
     $table = makeTable('occupied');
-    makeDraftOrder($table);
+    $order = makeDraftOrder($table);
+
+    $this->withSession(["active_order_{$table->id}" => $order->id])
+         ->get(route('customer.order', $table->id))
+         ->assertInertia(fn ($p) => $p->component('Customer/Menu'));
+});
+
+test('customer without session gets rejected when table is occupied', function () {
+    $table = makeTable('occupied');
+    $order = makeDraftOrder($table);
 
     $this->get(route('customer.order', $table->id))
-         ->assertInertia(fn ($p) => $p->component('Customer/Menu'));
+         ->assertInertia(fn ($p) => $p->component('Customer/TableOccupied'));
 });
 
 test('customer can start order and table becomes occupied', function () {
@@ -68,6 +77,41 @@ test('customer can start order and table becomes occupied', function () {
 
     expect(Order::where('table_id', $table->id)->first()->status)->toBe('draft');
     expect($table->fresh()->status)->toBe('occupied');
+});
+
+test('customer cannot start order on occupied table', function () {
+    $table = makeTable('occupied');
+    $order = makeDraftOrder($table);
+
+    $this->post(route('customer.start', $table->id), [
+        'customer_name'  => 'Intruder',
+        'customer_phone' => '08999999999',
+    ])->assertRedirect(route('customer.order', $table->id));
+
+    // Should still only have the original order
+    expect(Order::where('table_id', $table->id)->count())->toBe(1);
+});
+
+test('customer can resume session with correct phone number', function () {
+    $table = makeTable('occupied');
+    $order = makeDraftOrder($table);
+
+    $this->post(route('customer.resume', $table->id), [
+        'customer_phone' => $order->customer_phone,
+    ])->assertRedirect(route('customer.order', $table->id));
+
+    $this->assertEquals(session("active_order_{$table->id}"), $order->id);
+});
+
+test('customer cannot resume session with wrong phone number', function () {
+    $table = makeTable('occupied');
+    $order = makeDraftOrder($table);
+
+    $this->post(route('customer.resume', $table->id), [
+        'customer_phone' => '08999999999',
+    ])->assertRedirect(route('customer.order', $table->id));
+
+    $this->assertNull(session("active_order_{$table->id}"));
 });
 
 test('customer can add item to order', function () {
@@ -137,6 +181,35 @@ test('dapur user can access dapur dashboard', function () {
          ->assertInertia(fn ($p) => $p->component('Dapur/Index'));
 });
 
+// ─── Role-Based Login Redirects ──────────────────────────────────────────────
+
+test('admin redirect after login', function () {
+    $user = User::factory()->create(['role' => 'admin']);
+    $response = $this->post('/login', [
+        'email' => $user->email,
+        'password' => 'password',
+    ]);
+    $response->assertRedirect(route('admin.reports'));
+});
+
+test('kasir redirect after login', function () {
+    $user = User::factory()->create(['role' => 'kasir']);
+    $response = $this->post('/login', [
+        'email' => $user->email,
+        'password' => 'password',
+    ]);
+    $response->assertRedirect(route('kasir.index'));
+});
+
+test('dapur redirect after login', function () {
+    $user = User::factory()->create(['role' => 'dapur']);
+    $response = $this->post('/login', [
+        'email' => $user->email,
+        'password' => 'password',
+    ]);
+    $response->assertRedirect(route('dapur.index'));
+});
+
 // ─── Phase 6 — Kasir Payment ─────────────────────────────────────────────────
 
 test('kasir can process manual cash payment', function () {
@@ -151,6 +224,19 @@ test('kasir can process manual cash payment', function () {
          ->assertJsonPath('change', 10000);
 
     expect($order->fresh()->status)->toBe('completed');
+    expect($table->fresh()->status)->toBe('available');
+});
+
+test('kasir can cancel active order and reset table', function () {
+    $kasir = User::factory()->create(['role' => 'kasir']);
+    $table = makeTable('occupied');
+    $order = makeDraftOrder($table);
+
+    $this->actingAs($kasir)
+         ->postJson(route('kasir.cancel', $order->id))
+         ->assertOk();
+
+    expect($order->fresh()->status)->toBe('cancelled');
     expect($table->fresh()->status)->toBe('available');
 });
 
@@ -277,4 +363,3 @@ test('admin can view reports and export', function () {
          ->get(route('admin.reports.pdf'))
          ->assertOk();
 });
-

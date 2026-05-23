@@ -48,6 +48,18 @@ class KasirController extends Controller
         ]);
     }
 
+    public function cancelOrder(Order $order)
+    {
+        $order->update(['status' => 'cancelled']);
+        $order->table->update(['status' => 'available']);
+
+        broadcast(new OrderStatusUpdated($order));
+
+        return response()->json([
+            'message' => 'Pesanan berhasil dibatalkan dan meja telah di-reset.',
+        ]);
+    }
+
     public function printReceipt(Order $order)
     {
         $order->load(['items.menuItem', 'table', 'payment']);

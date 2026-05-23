@@ -17,12 +17,19 @@ Route::get('/', function () {
     return Inertia::render('Welcome', [
         'canLogin' => Route::has('login'),
         'canRegister' => Route::has('register'),
-        'laravelVersion' => Application::VERSION,
-        'phpVersion' => PHP_VERSION,
+        'tables' => \App\Models\Table::orderBy('number')->get(),
     ]);
 });
 
 Route::get('/dashboard', function () {
+    $user = auth()->user();
+    if ($user->role === 'admin') {
+        return redirect()->route('admin.reports');
+    } elseif ($user->role === 'kasir') {
+        return redirect()->route('kasir.index');
+    } elseif ($user->role === 'dapur') {
+        return redirect()->route('dapur.index');
+    }
     return Inertia::render('Dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
@@ -42,6 +49,7 @@ Route::post('/order/{order}/submit', [CustomerController::class, 'submitOrder'])
 Route::patch('/order/{order}/bill', [CustomerController::class, 'requestBill'])->name('customer.requestBill');
 Route::post('/order/{order}/pay/online', [CustomerController::class, 'payOnline'])->name('customer.payOnline');
 Route::get('/order/{order}/pay/status', [CustomerController::class, 'payStatus'])->name('customer.payStatus');
+Route::post('/order/{table}/resume', [CustomerController::class, 'resume'])->name('customer.resume');
 
 // Xendit Webhook (no auth — harus public)
 Route::post('/webhook/xendit', [XenditWebhookController::class, 'handle'])->name('webhook.xendit');
@@ -50,6 +58,7 @@ Route::post('/webhook/xendit', [XenditWebhookController::class, 'handle'])->name
 Route::middleware(['auth', 'role:kasir,admin'])->prefix('kasir')->group(function () {
     Route::get('/', [KasirController::class, 'index'])->name('kasir.index');
     Route::post('/payment/{order}', [KasirController::class, 'processPayment'])->name('kasir.payment');
+    Route::post('/cancel/{order}', [KasirController::class, 'cancelOrder'])->name('kasir.cancel');
     Route::get('/receipt/{order}', [KasirController::class, 'printReceipt'])->name('kasir.receipt');
 });
 

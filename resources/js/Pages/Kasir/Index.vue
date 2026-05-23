@@ -61,6 +61,29 @@ const processPayment = async () => {
     }
 };
 
+const cancelOrder = async () => {
+    if (!selectedOrder.value) return;
+    if (!confirm('Apakah Anda yakin ingin membatalkan pesanan ini dan me-reset meja?')) return;
+    
+    isProcessing.value = true;
+    try {
+        const res = await axios.post(route('kasir.cancel', selectedOrder.value.id));
+        
+        const tIdx = activeTables.value.findIndex(t => t.id === selectedTable.value.id);
+        if (tIdx !== -1) {
+            activeTables.value[tIdx].orders = [];
+            activeTables.value[tIdx].status = 'available';
+        }
+        
+        showPaymentModal.value = false;
+        toast.add({ severity: 'warn', summary: 'Pesanan Dibatalkan', detail: res.data.message, life: 5000 });
+    } catch (e) {
+        toast.add({ severity: 'error', summary: 'Gagal', detail: 'Gagal membatalkan pesanan.', life: 3000 });
+    } finally {
+        isProcessing.value = false;
+    }
+};
+
 onMounted(() => {
     if (window.Echo) {
         window.Echo.channel('kasir')
@@ -221,7 +244,8 @@ const getTableStatus = (table) => {
 
             <template #footer>
                 <div v-if="!showReceiptLink" class="flex gap-2 w-full">
-                    <Button label="Batal" severity="secondary" text @click="showPaymentModal = false" class="flex-1" />
+                    <Button label="Tutup" severity="secondary" text @click="showPaymentModal = false" class="flex-1" />
+                    <Button label="Batalkan Pesanan" severity="danger" outlined :loading="isProcessing" @click="cancelOrder" class="flex-1" />
                     <Button label="Konfirmasi Bayar" icon="pi pi-check" :loading="isProcessing" @click="processPayment" class="flex-1 font-bold bg-indigo-600 border-none" />
                 </div>
                 <Button v-else label="Tutup" severity="secondary" text @click="showPaymentModal = false" class="w-full" />
