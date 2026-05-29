@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { Head } from '@inertiajs/vue3';
+import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import axios from 'axios';
 import Button from 'primevue/button';
 import Dialog from 'primevue/dialog';
@@ -142,8 +143,9 @@ const getTableStatus = (table) => {
 
 <template>
     <Head title="Dashboard Kasir" />
-    <div class="min-h-screen bg-slate-950 text-slate-100 p-6 font-sans">
-        <Toast />
+    <AuthenticatedLayout>
+        <div class="p-6">
+            <Toast />
 
         <!-- Header -->
         <header class="flex justify-between items-center pb-6 border-b border-slate-800 mb-8">
@@ -251,5 +253,6 @@ const getTableStatus = (table) => {
                 <Button v-else label="Tutup" severity="secondary" text @click="showPaymentModal = false" class="w-full" />
             </template>
         </Dialog>
-    </div>
+        </div>
+    </AuthenticatedLayout>
 </template>

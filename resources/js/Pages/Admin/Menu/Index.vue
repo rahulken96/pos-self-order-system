@@ -1,6 +1,7 @@
 <script setup>
 import { ref } from 'vue';
 import { Head, router } from '@inertiajs/vue3';
+import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import Button from 'primevue/button';
 import Dialog from 'primevue/dialog';
 import InputText from 'primevue/inputtext';
@@ -119,21 +120,19 @@ const applyFilters = () => {
 
 <template>
     <Head title="Kelola Menu" />
-    <div class="min-h-screen bg-slate-950 text-slate-100 p-6 font-sans">
-        <Toast />
+    <AuthenticatedLayout>
+        <div class="p-6">
+            <Toast />
 
-        <header class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pb-6 border-b border-slate-800 mb-8">
-            <div>
-                <h1 class="text-2xl font-extrabold">Kelola Menu Makanan</h1>
-                <p class="text-xs text-slate-400">Tambah, ubah, dan atur ketersediaan menu</p>
-            </div>
-            <div class="flex gap-2">
-                <a :href="route('dashboard')">
-                    <Button label="Kembali ke Dashboard" icon="pi pi-arrow-left" severity="secondary" text />
-                </a>
-                <Button label="Tambah Menu Baru" icon="pi pi-plus" class="bg-indigo-600 border-none font-bold" @click="openCreate" />
-            </div>
-        </header>
+            <header class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pb-6 border-b border-slate-800 mb-8">
+                <div>
+                    <h1 class="text-2xl font-extrabold">Kelola Menu Makanan</h1>
+                    <p class="text-xs text-slate-400">Tambah, ubah, dan atur ketersediaan menu</p>
+                </div>
+                <div class="flex gap-2">
+                    <Button label="Tambah Menu Baru" icon="pi pi-plus" class="bg-indigo-600 border-none font-bold" @click="openCreate" />
+                </div>
+            </header>
 
         <!-- Filter & Search -->
         <div class="flex flex-col md:flex-row gap-4 mb-8 bg-slate-900 border border-slate-850 p-4 rounded-2xl">
@@ -232,5 +231,6 @@ const applyFilters = () => {
                 </div>
             </form>
         </Dialog>
-    </div>
+        </div>
+    </AuthenticatedLayout>
 </template>

@@ -1,6 +1,7 @@
 <script setup>
 import { ref } from 'vue';
 import { Head, router } from '@inertiajs/vue3';
+import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import Button from 'primevue/button';
 import Dialog from 'primevue/dialog';
 import InputText from 'primevue/inputtext';
@@ -85,21 +86,19 @@ const downloadQr = (table) => {
 
 <template>
     <Head title="Kelola Meja" />
-    <div class="min-h-screen bg-slate-950 text-slate-100 p-6 font-sans">
-        <Toast />
+    <AuthenticatedLayout>
+        <div class="p-6">
+            <Toast />
 
-        <header class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pb-6 border-b border-slate-800 mb-8">
-            <div>
-                <h1 class="text-2xl font-extrabold">Kelola Meja & QR Code</h1>
-                <p class="text-xs text-slate-400">Atur nomor meja dan unduh QR Code untuk pemesanan mandiri</p>
-            </div>
-            <div class="flex gap-2">
-                <a :href="route('dashboard')">
-                    <Button label="Kembali ke Dashboard" icon="pi pi-arrow-left" severity="secondary" text />
-                </a>
-                <Button label="Tambah Meja Baru" icon="pi pi-plus" class="bg-indigo-600 border-none font-bold" @click="openAdd" />
-            </div>
-        </header>
+            <header class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pb-6 border-b border-slate-800 mb-8">
+                <div>
+                    <h1 class="text-2xl font-extrabold">Kelola Meja & QR Code</h1>
+                    <p class="text-xs text-slate-400">Atur nomor meja dan unduh QR Code untuk pemesanan mandiri</p>
+                </div>
+                <div class="flex gap-2">
+                    <Button label="Tambah Meja Baru" icon="pi pi-plus" class="bg-indigo-600 border-none font-bold" @click="openAdd" />
+                </div>
+            </header>
 
         <!-- Tables Grid -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -177,5 +176,6 @@ const downloadQr = (table) => {
                 </div>
             </form>
         </Dialog>
-    </div>
+        </div>
+    </AuthenticatedLayout>
 </template>

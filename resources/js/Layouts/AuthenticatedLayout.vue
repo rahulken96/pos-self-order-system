@@ -1,196 +1,202 @@
 <script setup>
-import { ref } from 'vue';
-import ApplicationLogo from '@/Components/ApplicationLogo.vue';
-import Dropdown from '@/Components/Dropdown.vue';
-import DropdownLink from '@/Components/DropdownLink.vue';
-import NavLink from '@/Components/NavLink.vue';
-import ResponsiveNavLink from '@/Components/ResponsiveNavLink.vue';
-import { Link } from '@inertiajs/vue3';
+import { ref, computed } from 'vue';
+import { Link, Head } from '@inertiajs/vue3';
 
-const showingNavigationDropdown = ref(false);
+const isMobileMenuOpen = ref(false);
+
+const toggleMobileMenu = () => {
+    isMobileMenuOpen.value = !isMobileMenuOpen.value;
+};
+
+// Define menu items dynamically by user role
+const getMenuItems = (role) => {
+    if (role === 'admin') {
+        return [
+            { label: 'Laporan & Analitik', routeName: 'admin.reports', icon: 'pi pi-chart-bar' },
+            { label: 'Kelola Menu', routeName: 'menu.index', icon: 'pi pi-book' },
+            { label: 'Kelola Meja', routeName: 'tables.index', icon: 'pi pi-table' },
+            { label: 'Kelola Staff', routeName: 'users.index', icon: 'pi pi-users' }
+        ];
+    } else if (role === 'kasir') {
+        return [
+            { label: 'Antrean & Kasir', routeName: 'kasir.index', icon: 'pi pi-credit-card' }
+        ];
+    } else if (role === 'dapur') {
+        return [
+            { label: 'Antrean Dapur', routeName: 'dapur.index', icon: 'pi pi-server' }
+        ];
+    }
+    return [];
+};
 </script>
 
 <template>
-    <div>
-        <div class="min-h-screen bg-gray-100">
-            <nav
-                class="border-b border-gray-100 bg-white"
-            >
-                <!-- Primary Navigation Menu -->
-                <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                    <div class="flex h-16 justify-between">
-                        <div class="flex">
-                            <!-- Logo -->
-                            <div class="flex shrink-0 items-center">
-                                <Link :href="route('dashboard')">
-                                    <ApplicationLogo
-                                        class="block h-9 w-auto fill-current text-gray-800"
-                                    />
-                                </Link>
-                            </div>
-
-                            <!-- Navigation Links -->
-                            <div
-                                class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex"
-                            >
-                                <NavLink
-                                    :href="route('dashboard')"
-                                    :active="route().current('dashboard')"
-                                >
-                                    Dashboard
-                                </NavLink>
-                            </div>
-                        </div>
-
-                        <div class="hidden sm:ms-6 sm:flex sm:items-center">
-                            <!-- Settings Dropdown -->
-                            <div class="relative ms-3">
-                                <Dropdown align="right" width="48">
-                                    <template #trigger>
-                                        <span class="inline-flex rounded-md">
-                                            <button
-                                                type="button"
-                                                class="inline-flex items-center rounded-md border border-transparent bg-white px-3 py-2 text-sm font-medium leading-4 text-gray-500 transition duration-150 ease-in-out hover:text-gray-700 focus:outline-none"
-                                            >
-                                                {{ $page.props.auth.user.name }}
-
-                                                <svg
-                                                    class="-me-0.5 ms-2 h-4 w-4"
-                                                    xmlns="http://www.w3.org/2000/svg"
-                                                    viewBox="0 0 20 20"
-                                                    fill="currentColor"
-                                                >
-                                                    <path
-                                                        fill-rule="evenodd"
-                                                        d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                                                        clip-rule="evenodd"
-                                                    />
-                                                </svg>
-                                            </button>
-                                        </span>
-                                    </template>
-
-                                    <template #content>
-                                        <DropdownLink
-                                            :href="route('profile.edit')"
-                                        >
-                                            Profile
-                                        </DropdownLink>
-                                        <DropdownLink
-                                            :href="route('logout')"
-                                            method="post"
-                                            as="button"
-                                        >
-                                            Log Out
-                                        </DropdownLink>
-                                    </template>
-                                </Dropdown>
-                            </div>
-                        </div>
-
-                        <!-- Hamburger -->
-                        <div class="-me-2 flex items-center sm:hidden">
-                            <button
-                                @click="
-                                    showingNavigationDropdown =
-                                        !showingNavigationDropdown
-                                "
-                                class="inline-flex items-center justify-center rounded-md p-2 text-gray-400 transition duration-150 ease-in-out hover:bg-gray-100 hover:text-gray-500 focus:bg-gray-100 focus:text-gray-500 focus:outline-none"
-                            >
-                                <svg
-                                    class="h-6 w-6"
-                                    stroke="currentColor"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                >
-                                    <path
-                                        :class="{
-                                            hidden: showingNavigationDropdown,
-                                            'inline-flex':
-                                                !showingNavigationDropdown,
-                                        }"
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        stroke-width="2"
-                                        d="M4 6h16M4 12h16M4 18h16"
-                                    />
-                                    <path
-                                        :class="{
-                                            hidden: !showingNavigationDropdown,
-                                            'inline-flex':
-                                                showingNavigationDropdown,
-                                        }"
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        stroke-width="2"
-                                        d="M6 18L18 6M6 6l12 12"
-                                    />
-                                </svg>
-                            </button>
-                        </div>
-                    </div>
+    <div class="flex min-h-screen bg-slate-950 text-slate-100 font-sans">
+        <!-- Sidebar for Desktop -->
+        <aside class="hidden md:flex flex-col w-64 bg-slate-900 border-r border-slate-850 shrink-0 select-none">
+            <!-- Brand header -->
+            <div class="flex items-center gap-3 px-6 py-5 border-b border-slate-850/80">
+                <div class="bg-gradient-to-tr from-emerald-400 to-teal-500 p-2 rounded-xl shadow-lg shadow-emerald-500/20">
+                    <i class="pi pi-shop text-slate-950 text-base font-bold"></i>
                 </div>
+                <div>
+                    <h2 class="text-sm font-bold tracking-tight bg-gradient-to-r from-emerald-400 to-teal-300 bg-clip-text text-transparent">POS Self-Order</h2>
+                    <p class="text-[10px] text-slate-400">Portal Staff Restoran</p>
+                </div>
+            </div>
 
-                <!-- Responsive Navigation Menu -->
-                <div
-                    :class="{
-                        block: showingNavigationDropdown,
-                        hidden: !showingNavigationDropdown,
-                    }"
-                    class="sm:hidden"
+            <!-- Profile Info Card -->
+            <div class="p-4 mx-4 my-4 rounded-2xl bg-slate-950/40 border border-slate-850/60 flex items-center gap-3">
+                <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center text-slate-950 font-black text-sm uppercase">
+                    {{ $page.props.auth.user.name.charAt(0) }}
+                </div>
+                <div class="min-w-0 flex-1">
+                    <p class="text-xs font-bold text-slate-200 truncate">{{ $page.props.auth.user.name }}</p>
+                    <span class="inline-block text-[9px] font-bold text-emerald-400 uppercase bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/15 mt-0.5">
+                        {{ $page.props.auth.user.role }}
+                    </span>
+                </div>
+            </div>
+
+            <!-- Sidebar Navigation Links -->
+            <nav class="flex-1 px-4 space-y-1 overflow-y-auto">
+                <Link
+                    v-for="item in getMenuItems($page.props.auth.user.role)"
+                    :key="item.routeName"
+                    :href="route(item.routeName)"
+                    class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 group border"
+                    :class="[
+                        route().current(item.routeName) || ($page.url.startsWith('/admin/menu') && item.routeName === 'menu.index') || ($page.url.startsWith('/admin/tables') && item.routeName === 'tables.index') || ($page.url.startsWith('/admin/users') && item.routeName === 'users.index')
+                            ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20 shadow-sm shadow-emerald-950/20'
+                            : 'text-slate-400 hover:text-slate-200 hover:bg-slate-850/40 border-transparent'
+                    ]"
                 >
-                    <div class="space-y-1 pb-3 pt-2">
-                        <ResponsiveNavLink
-                            :href="route('dashboard')"
-                            :active="route().current('dashboard')"
-                        >
-                            Dashboard
-                        </ResponsiveNavLink>
-                    </div>
-
-                    <!-- Responsive Settings Options -->
-                    <div
-                        class="border-t border-gray-200 pb-1 pt-4"
-                    >
-                        <div class="px-4">
-                            <div
-                                class="text-base font-medium text-gray-800"
-                            >
-                                {{ $page.props.auth.user.name }}
-                            </div>
-                            <div class="text-sm font-medium text-gray-500">
-                                {{ $page.props.auth.user.email }}
-                            </div>
-                        </div>
-
-                        <div class="mt-3 space-y-1">
-                            <ResponsiveNavLink :href="route('profile.edit')">
-                                Profile
-                            </ResponsiveNavLink>
-                            <ResponsiveNavLink
-                                :href="route('logout')"
-                                method="post"
-                                as="button"
-                            >
-                                Log Out
-                            </ResponsiveNavLink>
-                        </div>
-                    </div>
-                </div>
+                    <i :class="[item.icon, route().current(item.routeName) ? 'text-emerald-400' : 'text-slate-500 group-hover:text-slate-300']" class="text-base"></i>
+                    <span>{{ item.label }}</span>
+                </Link>
             </nav>
 
-            <!-- Page Heading -->
-            <header
-                class="bg-white shadow"
-                v-if="$slots.header"
-            >
-                <div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-                    <slot name="header" />
+            <!-- Bottom Actions -->
+            <div class="p-4 border-t border-slate-850 space-y-1">
+                <Link
+                    :href="route('profile.edit')"
+                    class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-slate-400 hover:text-slate-200 hover:bg-slate-850/40 transition-all border border-transparent"
+                    :class="{ 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20': route().current('profile.edit') }"
+                >
+                    <i class="pi pi-user-edit text-base" :class="{ 'text-emerald-400': route().current('profile.edit') }"></i>
+                    <span>Pengaturan Akun</span>
+                </Link>
+                <Link
+                    :href="route('logout')"
+                    method="post"
+                    as="button"
+                    class="flex w-full items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-rose-400 hover:text-rose-350 hover:bg-rose-500/5 transition-all text-left border border-transparent cursor-pointer"
+                >
+                    <i class="pi pi-sign-out text-base"></i>
+                    <span>Log Out</span>
+                </Link>
+            </div>
+        </aside>
+
+        <!-- Mobile Header & Navigation Drawer -->
+        <div class="flex-1 flex flex-col min-w-0 min-h-screen">
+            <!-- Mobile Top Navbar -->
+            <header class="md:hidden flex items-center justify-between px-6 py-4 border-b border-slate-850 bg-slate-900/60 backdrop-blur-md sticky top-0 z-40 select-none">
+                <div class="flex items-center gap-2">
+                    <div class="bg-gradient-to-tr from-emerald-400 to-teal-500 p-1.5 rounded-lg shadow shadow-emerald-500/20">
+                        <i class="pi pi-shop text-slate-950 text-xs font-bold"></i>
+                    </div>
+                    <span class="font-extrabold text-sm tracking-tight bg-gradient-to-r from-emerald-400 to-teal-300 bg-clip-text text-transparent">POS Self-Order</span>
                 </div>
+                <button
+                    @click="toggleMobileMenu"
+                    class="p-2 -mr-2 rounded-xl text-slate-400 hover:text-slate-200 hover:bg-slate-850 focus:outline-none transition-colors border border-slate-800"
+                >
+                    <i :class="isMobileMenuOpen ? 'pi pi-times' : 'pi pi-bars'" class="text-base"></i>
+                </button>
             </header>
 
-            <!-- Page Content -->
-            <main>
+            <!-- Mobile Drawer Overlay -->
+            <div
+                v-if="isMobileMenuOpen"
+                @click="toggleMobileMenu"
+                class="md:hidden fixed inset-0 z-40 bg-slate-950/60 backdrop-blur-sm transition-opacity"
+            ></div>
+
+            <!-- Mobile Navigation Drawer -->
+            <aside
+                class="md:hidden fixed top-0 bottom-0 left-0 z-50 w-64 bg-slate-900 border-r border-slate-850 flex flex-col transition-transform duration-300 ease-in-out transform select-none"
+                :class="isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'"
+            >
+                <div class="flex items-center justify-between px-6 py-5 border-b border-slate-850/80">
+                    <div class="flex items-center gap-2">
+                        <div class="bg-gradient-to-tr from-emerald-400 to-teal-500 p-1.5 rounded-lg shadow shadow-emerald-500/20">
+                            <i class="pi pi-shop text-slate-950 text-xs font-bold"></i>
+                        </div>
+                        <span class="font-bold text-sm tracking-tight text-white">POS Self-Order</span>
+                    </div>
+                    <button @click="toggleMobileMenu" class="text-slate-400 hover:text-white p-1">
+                        <i class="pi pi-times text-sm"></i>
+                    </button>
+                </div>
+
+                <!-- Profile Info Card -->
+                <div class="p-4 mx-4 my-4 rounded-2xl bg-slate-950/40 border border-slate-850/60 flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center text-slate-950 font-black text-xs uppercase">
+                        {{ $page.props.auth.user.name.charAt(0) }}
+                    </div>
+                    <div class="min-w-0 flex-1">
+                        <p class="text-xs font-bold text-slate-200 truncate">{{ $page.props.auth.user.name }}</p>
+                        <span class="inline-block text-[8px] font-bold text-emerald-400 uppercase bg-emerald-500/10 px-1.5 py-0.2 rounded border border-emerald-500/15 mt-0.5">
+                            {{ $page.props.auth.user.role }}
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Nav Menu -->
+                <nav class="flex-1 px-4 space-y-1 overflow-y-auto">
+                    <Link
+                        v-for="item in getMenuItems($page.props.auth.user.role)"
+                        :key="item.routeName"
+                        :href="route(item.routeName)"
+                        @click="toggleMobileMenu"
+                        class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 group border"
+                        :class="[
+                            route().current(item.routeName) || ($page.url.startsWith('/admin/menu') && item.routeName === 'menu.index') || ($page.url.startsWith('/admin/tables') && item.routeName === 'tables.index') || ($page.url.startsWith('/admin/users') && item.routeName === 'users.index')
+                                ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                                : 'text-slate-400 hover:text-slate-250 hover:bg-slate-850/40 border-transparent'
+                        ]"
+                    >
+                        <i :class="[item.icon, route().current(item.routeName) ? 'text-emerald-400' : 'text-slate-500']" class="text-sm"></i>
+                        <span>{{ item.label }}</span>
+                    </Link>
+                </nav>
+
+                <!-- Bottom Actions -->
+                <div class="p-4 border-t border-slate-850 space-y-1">
+                    <Link
+                        :href="route('profile.edit')"
+                        @click="toggleMobileMenu"
+                        class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-slate-400 hover:text-slate-200 hover:bg-slate-850/40 transition-all border border-transparent"
+                        :class="{ 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20': route().current('profile.edit') }"
+                    >
+                        <i class="pi pi-user-edit text-sm" :class="{ 'text-emerald-400': route().current('profile.edit') }"></i>
+                        <span>Pengaturan Akun</span>
+                    </Link>
+                    <Link
+                        :href="route('logout')"
+                        method="post"
+                        as="button"
+                        class="flex w-full items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-rose-400 hover:bg-rose-500/5 transition-all text-left border border-transparent cursor-pointer"
+                    >
+                        <i class="pi pi-sign-out text-sm"></i>
+                        <span>Log Out</span>
+                    </Link>
+                </div>
+            </aside>
+
+            <!-- Page Main Slot Panel -->
+            <main class="flex-grow flex flex-col min-w-0">
                 <slot />
             </main>
         </div>

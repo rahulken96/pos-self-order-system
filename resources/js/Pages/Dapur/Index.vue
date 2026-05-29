@@ -1,6 +1,7 @@
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue';
 import { Head, router } from '@inertiajs/vue3';
+import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import axios from 'axios';
 import Card from 'primevue/card';
 import Button from 'primevue/button';
@@ -150,8 +151,9 @@ const formatTime = (timeString) => {
 <template>
     <Head title="Monitor Dapur Realtime" />
 
-    <div class="min-h-screen bg-[#0F172A] text-slate-100 p-6 font-sans">
-        <Toast />
+    <AuthenticatedLayout>
+        <div class="p-6">
+            <Toast />
 
         <!-- Header -->
         <header class="flex justify-between items-center pb-6 border-b border-slate-800 mb-8">
@@ -240,6 +242,7 @@ const formatTime = (timeString) => {
                     </div>
                 </div>
             </div>
+            </div>
         </div>
-    </div>
+    </AuthenticatedLayout>
 </template>

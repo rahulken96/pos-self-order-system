@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed } from 'vue';
 import { Head, router } from '@inertiajs/vue3';
+import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import Button from 'primevue/button';
 import InputText from 'primevue/inputtext';
 import DatePicker from 'primevue/datepicker'; // Wait, let's use standard native input type="date" to be extremely safe across PrimeVue version versions.
@@ -85,22 +86,20 @@ const getMethodLabel = (method) => {
 
 <template>
     <Head title="Laporan Penjualan" />
-    <div class="min-h-screen bg-slate-950 text-slate-100 p-6 font-sans">
-        <Toast />
+    <AuthenticatedLayout>
+        <div class="p-6">
+            <Toast />
 
-        <header class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pb-6 border-b border-slate-800 mb-8">
-            <div>
-                <h1 class="text-2xl font-extrabold">Laporan Penjualan & Analitik</h1>
-                <p class="text-xs text-slate-400">Analisis kinerja bisnis, omzet, dan export laporan</p>
-            </div>
-            <div class="flex gap-2">
-                <a :href="route('dashboard')">
-                    <Button label="Kembali ke Dashboard" icon="pi pi-arrow-left" severity="secondary" text />
-                </a>
-                <Button label="Excel Export" icon="pi pi-file-excel" class="bg-emerald-600 border-none font-bold" @click="exportExcel" />
-                <Button label="PDF Export" icon="pi pi-file-pdf" class="bg-red-650 border-none font-bold" @click="exportPdf" />
-            </div>
-        </header>
+            <header class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pb-6 border-b border-slate-800 mb-8">
+                <div>
+                    <h1 class="text-2xl font-extrabold">Laporan Penjualan & Analitik</h1>
+                    <p class="text-xs text-slate-400">Analisis kinerja bisnis, omzet, dan export laporan</p>
+                </div>
+                <div class="flex gap-2">
+                    <Button label="Excel Export" icon="pi pi-file-excel" class="bg-emerald-600 border-none font-bold" @click="exportExcel" />
+                    <Button label="PDF Export" icon="pi pi-file-pdf" class="bg-red-650 border-none font-bold" @click="exportPdf" />
+                </div>
+            </header>
 
         <!-- Filters -->
         <div class="flex flex-col md:flex-row gap-4 mb-8 bg-slate-900 border border-slate-850 p-4 rounded-2xl items-end">
@@ -279,4 +278,5 @@ const getMethodLabel = (method) => {
             </div>
         </div>
     </div>
+    </AuthenticatedLayout>
 </template>
