@@ -218,7 +218,7 @@ sequenceDiagram
 
 1. **Clone the repository:**
    ```bash
-   git clone https://github.com/your-username/pos-self-order-system.git
+   git clone https://github.com/rahulken96/pos-self-order-system.git
    cd pos-self-order-system
    ```
 
